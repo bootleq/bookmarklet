@@ -111,15 +111,15 @@ function loadStyle(code, path, {loadOnce, inline}) {
   let tagName = inline ? 'style' : 'link';
   let insertHTML = `${code}
           if (!${loadOnce} || !document.getElementById("${id}")) {
-            var link = document.createElement("${tagName}");
+            let s = document.createElement("${tagName}");
             if (${loadOnce}) {
-              link.id = "${id}";
+              s.id = "${id}";
             }
             ${inline
-              ? `link.type = "text/css"; link.textContent = "${quoteEscape(readStyle(path))}";`
-              : `link.rel = "stylesheet"; link.href = "${quoteEscape(path)}";`
+              ? `s.type = "text/css"; s.textContent = "${quoteEscape(readStyle(path))}";`
+              : `s.rel = "stylesheet"; s.href = "${quoteEscape(path)}";`
             }
-            document.${inline ? 'head' : 'body'}.appendChild(link);
+            document.${inline ? 'head' : 'body'}.appendChild(s);
           }`;
   return insertHTML;
 }
