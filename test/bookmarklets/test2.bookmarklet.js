@@ -9,7 +9,7 @@ const $ = jQuery.noConflict(true);
 const pCount = $('p').size();
 const divCount = $('div').size();
 const testElement = $('<imaginary>').appendTo('body');
-const testPassed = testElement.css('font-family') === 'ok';
+const testPassed = testElement.css('font-family').match(/\bok\b/);
 
 testElement.remove();
 

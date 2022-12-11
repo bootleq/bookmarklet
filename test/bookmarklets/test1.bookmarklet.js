@@ -9,8 +9,9 @@ var $ = jQuery.noConflict(true),
     pCount = $('p').size(),
     divCount = $('div').size(),
     testElement = $('<imaginary>').appendTo('body'),
-    testPassed = testElement.css('font-family') == 'ok';
-    testElement.remove();
+    testPassed = testElement.css('font-family').match(/\bok\b/);
+
+testElement.remove();
 
 alert('p tags: ' + pCount +
       '\ndiv tags: ' + divCount +
