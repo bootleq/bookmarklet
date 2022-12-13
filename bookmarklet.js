@@ -4,6 +4,7 @@ const version = [3, 0, 0];
 // const babelPresetEnv = require('@babel/preset-env');
 const fs = require('fs');
 const md5 = require('md5');
+const csso = require('csso');
 const Terser = require('terser');
 
 // metadata
@@ -99,7 +100,7 @@ function loadScript(code, path, loadOnce) {
 
 function readStyle(path) {
   let str = fs.readFileSync(path, 'utf8');
-  str = str.replace(/(\s{2,}|\n)/g, ''); // remove whitespaces in CSS
+  str = csso.minify(str, {comments: false}).css;
   return str;
 }
 
@@ -116,7 +117,7 @@ function loadStyle(code, path, {loadOnce, inline}) {
               s.id = "${id}";
             }
             ${inline
-              ? `s.type = "text/css"; s.textContent = "${quoteEscape(readStyle(path))}";`
+              ? `s.type = "text/css"; s.textContent = ${JSON.stringify(readStyle(path))};`
               : `s.rel = "stylesheet"; s.href = "${quoteEscape(path)}";`
             }
             document.${inline ? 'head' : 'body'}.appendChild(s);
