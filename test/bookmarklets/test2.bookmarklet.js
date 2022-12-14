@@ -1,7 +1,7 @@
 // ==Bookmarklet==
 // @name Test
 // @author Peter
-// @style !loadOnce data:text/css,imaginary%7Bfont-family%3A%20%22ok%22%7D
+// @style !loadOnce data:text/css,imaginary%7Bfont-family%3A%20ok%7D
 // @script !loadOnce=false https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // ==/Bookmarklet==
 
