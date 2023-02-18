@@ -1,7 +1,16 @@
 # Bookmarklet: sane development, familiar format
 
-[![Build Status](https://travis-ci.org/mrcoles/bookmarklet.svg?branch=master)](https://travis-ci.org/mrcoles/bookmarklet)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+Forked from [mrcoles/bookmarklet](https://github.com/mrcoles/bookmarklet).
+
+Still willing to be merged, current enhancements include:
+
+- Add `minify` option `-m`, see [#23](https://github.com/mrcoles/bookmarklet/issues/23)
+
+- Extend `@style` metadata to support `!inline` option, it reads stylesheet file and embed to final bookmarklet.
+
+- Minor test fixes.
+
+---
 
 Bookmarklet is a nodejs module for compiling bookmarklets in server-side code and directly from the shell. You can run it on any JavaScript file—it will minify it using [terser][], wrap it in a self executing function, and return an escaped bookmarklet.
 
