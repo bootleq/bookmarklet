@@ -2,7 +2,9 @@ const version = [3, 0, 0];
 
 // const babel = require('@babel/core');
 // const babelPresetEnv = require('@babel/preset-env');
+const fs = require('fs');
 const md5 = require('md5');
+const csso = require('csso');
 const Terser = require('terser');
 
 // metadata
@@ -96,20 +98,31 @@ function loadScript(code, path, loadOnce) {
     `;
 }
 
-function loadStyle(code, path, loadOnce) {
+function readStyle(path) {
+  let str = fs.readFileSync(path, 'utf8');
+  str = csso.minify(str, {comments: false}).css;
+  return str;
+}
+
+function loadStyle(code, path, {loadOnce, inline}) {
   loadOnce = !!loadOnce;
+  inline = !!inline;
   let id = `bookmarklet__style_${md5(path).substring(0, 7)}`;
-  return `${code}
-        if (!${loadOnce} || !document.getElementById("${id}")) {
-          var link = document.createElement("link");
-          if (${loadOnce}) {
-            link.id = "${id}";
-          }
-          link.rel="stylesheet";
-          link.href = "${quoteEscape(path)}";
-          document.body.appendChild(link);
-        }
-    `;
+
+  let tagName = inline ? 'style' : 'link';
+  let insertHTML = `${code}
+          if (!${loadOnce} || !document.getElementById("${id}")) {
+            let s = document.createElement("${tagName}");
+            if (${loadOnce}) {
+              s.id = "${id}";
+            }
+            ${inline
+              ? `s.type = "text/css"; s.textContent = ${JSON.stringify(readStyle(path))};`
+              : `s.rel = "stylesheet"; s.href = "${quoteEscape(path)}";`
+            }
+            document.${inline ? 'head' : 'body'}.appendChild(s);
+          }`;
+  return insertHTML;
 }
 
 async function minify(code, minifyOptions) {
@@ -145,7 +158,7 @@ async function convert(code, options, minifyOptions) {
   if (options.style) {
     options.style.forEach(s => {
       let { path, opts } = extractOptions(s);
-      stylesCode = loadStyle(stylesCode, path, opts.loadOnce);
+      stylesCode = loadStyle(stylesCode, path, opts);
     });
     const minifiedStyles = await minify(stylesCode, minifyOptions);
     code = minifiedStyles + code;
