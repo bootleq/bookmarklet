@@ -2,7 +2,9 @@ const version = [3, 0, 0];
 
 // const babel = require('@babel/core');
 // const babelPresetEnv = require('@babel/preset-env');
+const fs = require('fs');
 const md5 = require('md5');
+const csso = require('csso');
 const Terser = require('terser');
 
 // metadata
@@ -96,23 +98,34 @@ function loadScript(code, path, loadOnce) {
     `;
 }
 
-function loadStyle(code, path, loadOnce) {
-  loadOnce = !!loadOnce;
-  let id = `bookmarklet__style_${md5(path).substring(0, 7)}`;
-  return `${code}
-        if (!${loadOnce} || !document.getElementById("${id}")) {
-          var link = document.createElement("link");
-          if (${loadOnce}) {
-            link.id = "${id}";
-          }
-          link.rel="stylesheet";
-          link.href = "${quoteEscape(path)}";
-          document.body.appendChild(link);
-        }
-    `;
+function readStyle(path) {
+  let str = fs.readFileSync(path, 'utf8');
+  str = csso.minify(str, {comments: false}).css;
+  return str;
 }
 
-async function minify(code) {
+function loadStyle(code, path, {loadOnce, inline}) {
+  loadOnce = !!loadOnce;
+  inline = !!inline;
+  let id = `bookmarklet__style_${md5(path).substring(0, 7)}`;
+
+  let tagName = inline ? 'style' : 'link';
+  let insertHTML = `${code}
+          if (!${loadOnce} || !document.getElementById("${id}")) {
+            let s = document.createElement("${tagName}");
+            if (${loadOnce}) {
+              s.id = "${id}";
+            }
+            ${inline
+              ? `s.type = "text/css"; s.textContent = ${JSON.stringify(readStyle(path))};`
+              : `s.rel = "stylesheet"; s.href = "${quoteEscape(path)}";`
+            }
+            document.${inline ? 'head' : 'body'}.appendChild(s);
+          }`;
+  return insertHTML;
+}
+
+async function minify(code, minifyOptions) {
   // const result = babel.transform(code, {
   //   presets: [
   //     [
@@ -125,12 +138,12 @@ async function minify(code) {
   //     ]
   //   ]
   // });
-  const result = await Terser.minify(code);
+  const result = await Terser.minify(code, minifyOptions);
   return result.code;
 }
 
-async function convert(code, options) {
-  code = await minify(code);
+async function convert(code, options, minifyOptions) {
+  code = await minify(code, minifyOptions);
   let stylesCode = '';
 
   if (options.script) {
@@ -139,15 +152,15 @@ async function convert(code, options) {
       let { path, opts } = extractOptions(s);
       code = loadScript(code, path, opts.loadOnce);
     });
-    code = await minify(code);
+    code = await minify(code, minifyOptions);
   }
 
   if (options.style) {
     options.style.forEach(s => {
       let { path, opts } = extractOptions(s);
-      stylesCode = loadStyle(stylesCode, path, opts.loadOnce);
+      stylesCode = loadStyle(stylesCode, path, opts);
     });
-    const minifiedStyles = await minify(stylesCode);
+    const minifiedStyles = await minify(stylesCode, minifyOptions);
     code = minifiedStyles + code;
   }
 

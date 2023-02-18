@@ -1,0 +1,6 @@
+.imaginary {
+  display: table;
+}
+.imaginary::before {
+  content: 'a   b';
+}
